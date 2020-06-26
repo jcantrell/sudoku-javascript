@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { padding: 0; margin: 0; }
+    canvas { background: #fff; display: block; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <canvas id="mainCanvas" width="480" height="320"></canvas>
+<script>
+class Point {
+  constructor(x=0,y=0) {
+    this.x=x;
+    this.y=y;
+  }
+}
+class Line {
+  constructor (a, b) {
+    this.a = a;
+    this.b = b;
+  }
+  draw (ctx) {
+    ctx.beginPath();
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = 1;
+    ctx.moveTo(this.a.x,this.a.y);
+    ctx.lineTo(this.b.x,this.b.y);
+    ctx.stroke();
+  }
+}
+class SudokuGrid {
+  constructor (
+  )
+  {
+  }
+}
+class Sudoku {
+  constructor() {
+    this.board = [
+      [ 0, 1, 2, 3, 4, 5, 6, 7, 8],
+      [ 9,11,12,13,14,15,16,17,18],
+      [18,19,20,21,22,23,24,25,26],
+      [27,28,29,30,31,32,33,34,35],
+      [36,37,38,39,40,41,42,43,44],
+      [45,46,47,48,49,50,51,52,53],
+      [54,55,56,57,58,59,60,61,62],
+      [63,64,65,66,67,68,69,70,71],
+      [72,73,74,75,76,77,78,79,80]
+/*
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0]
+*/
+    ];
+    this.focus = { x: 0, y: 0 };
+    this.tl = new Point(0,0);
+  }
+  draw (ctx) {
+    var bw = 50;
+    var bh = 50;
+    var t=0;
+    for (var c=0;c<9;c++) {
+      for (var r=0;r<9;r++) {
+        ctx.strokeStyle = 'grey';
+        ctx.strokeRect(this.tl.x + c*bw, this.tl.y + r*bh, bw, bh);
+        ctx.strokeStyle = 'black';
+        ctx.fillText("hello",50,50);
+        //t++;
+      }
+    }
+    ctx.beginPath();
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 1;
+    ctx.moveTo(50,50);
+    ctx.lineTo(1000,1000);
+    ctx.stroke();
+  }
+  click(ctx,e) {
+    this.focus.x = e.x; 
+    this.focus.y = e.y;
+    this.draw(ctx);
+  }
+}
+
+let sudoku = new Sudoku();
+var canvas = document.getElementById("mainCanvas");
+document.addEventListener("mousedown", mouseDownHandler);
+canvas.width = 630;
+canvas.height = 630;
+var ctx = canvas.getContext('2d');
+ctx.fillStyle = "lightgrey";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+function mouseDownHandler(e) {
+  sudoku.click(ctx,e);
+  //alert("hello"+e.x+" "+e.y);
+}
+</script>
+</body>
+</html>
