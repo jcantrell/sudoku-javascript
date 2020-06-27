@@ -34,7 +34,7 @@ class SudokuGrid {
   }
 }
 class Sudoku {
-  constructor() {
+  constructor(xin=0,yin=0) {
     this.board = [
       [0,0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0,0],
@@ -47,7 +47,7 @@ class Sudoku {
       [0,0,0,0,0,0,0,0,0]
     ];
     this.focus = { x: 0, y: 0, r: 0, c: 0 };
-    this.tl = new Point(0,0);
+    this.tl = new Point(xin,yin);
     this.bw = 50;
     this.bh = 50;
   }
@@ -79,8 +79,6 @@ class Sudoku {
     return b;
   }
   draw (ctx) {
-    this.tl.x = ctx.canvas.getBoundingClientRect().left;
-    this.tl.y = ctx.canvas.getBoundingClientRect().top;
 
     // Background
     ctx.fillStyle = "lightgrey";
@@ -111,7 +109,6 @@ class Sudoku {
     for (var r=0;r<3;r++) {
       for (var c=0;c<3;c++) {
         ctx.strokeRect(c*this.bw*3, r*this.bh*3, this.bw*3, this.bh*3);
-        //ctx.fillRect(c*this.bw*3, r*this.bh*3, this.bw*3, this.bh*3);
       }
     }
     ctx.lineWidth = 1;
@@ -121,6 +118,7 @@ class Sudoku {
       for (var c=0;c<9;c++) {
         ctx.fillStyle = 'black';
         ctx.font = '16px serif';
+        //alert("printing numbers");
         if (this.board[r][c] != 0)
           ctx.fillText(this.board[r][c],(c+1)*this.bw-30,(r+1)*this.bh-20);
       }
@@ -135,25 +133,38 @@ class Sudoku {
     this.draw(ctx);
   }
   solve (b,ctx) {
-    alert("solve called");
-    for (var r=0;r<9;r++)
-      for (var c=0;c<9;c++)
-        if (b[r][c] == 0)
+    //alert("solve called");
+    for (var r=0;r<9;r++) {
+      //alert("first loop");
+      for (var c=0;c<9;c++) {
+        //alert("second loop "+c);
+        if (b[r][c] == 0) {
+          //alert("b[r][c]: "+b[r][c]);
           for (var v=1;v<=9;v++) {
+            //alert("v: "+v);
             b[r][c] = v;
-            this.draw(ctx);
+            //alert("assigned");
+            //this.draw(ctx);
+            //alert("drawn");
             if (this.isValid(this.copyBoard(b))) {
+              //alert("valid: "+r+" "+c+" "+v);
               if (this.isFull(this.copyBoard(b))) { 
                 alert("final solution found");
+
+                for (var i=0;i<9;i++) for (var j=0;j<9;j++)
+                  this.board[i][j] = b[r][c];
+
                 return true; 
               } else {
                 if (this.solve(this.copyBoard(b))) {
-                  alert("recursing");
                   return true;
                 }
               }
-            }
+            } else { alert("not valid"); }
           }
+        }
+      }
+    }
     alert("solve failed");
     return false;
   }
@@ -163,12 +174,11 @@ class Sudoku {
       this.draw(ctx);
       this.isValid(this.board);
     } else if (e.keyCode == 83) {
-      alert("hello");
       var t = this.copyBoard(this.board);
-      alert("calling solve");
+      //alert("calling solve");
       this.solve(t,ctx);
       this.draw(ctx);
-      alert("solve called");
+      //alert("solve called");
     }
   }
   isValid(b) {
@@ -237,7 +247,9 @@ class Sudoku {
   }
 }
 
-let sudoku = new Sudoku();
+var canvas = document.getElementById("mainCanvas");
+var ctx = canvas.getContext('2d');
+let sudoku = new Sudoku(ctx.canvas.getBoundingClientRect().left,ctx.canvas.getBoundingClientRect().top);
 sudoku.board[0][0] = 5;
 sudoku.board[0][2] = 9;
 sudoku.board[0][8] = 3;
@@ -272,13 +284,11 @@ sudoku.board[7][8] = 7;
 sudoku.board[8][0] = 8;
 sudoku.board[8][6] = 2;
 sudoku.board[8][8] = 5;
-var canvas = document.getElementById("mainCanvas");
 document.addEventListener("mousedown", mouseDownHandler);
 document.addEventListener("keydown", keyDownHandler);
 document.addEventListener("mousemove", mouseMoveHandler);
 canvas.width = 450;
 canvas.height = 450;
-var ctx = canvas.getContext('2d');
 //ctx.fillStyle = "lightgrey";
 //ctx.fillRect(0,0,canvas.width,canvas.height);
 sudoku.draw(ctx);
