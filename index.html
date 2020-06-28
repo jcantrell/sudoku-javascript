@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8"/>
   <style>
     * { padding: 0; margin: 0; }
     canvas { background: #fff; display: block; margin: 0 auto; }
@@ -8,9 +9,14 @@
 </head>
 <body>
   <canvas id="mainCanvas" width="480" height="320"></canvas>
-<script> class Point { constructor(x=0,y=0) {
+<script> 
+class Point { 
+  constructor(x=0,y=0) {
     this.x=x;
     this.y=y;
+  }
+  asString() {
+    return "(Pt "+x+" "+y+")";
   }
 }
 class Line {
@@ -26,11 +32,8 @@ class Line {
     ctx.lineTo(this.b.x,this.b.y);
     ctx.stroke();
   }
-}
-class SudokuGrid {
-  constructor (
-  )
-  {
+  asString() {
+    return "(Line: "+this.a.asString()+" "+this.b.asString()+")"
   }
 }
 class Sudoku {
@@ -46,22 +49,50 @@ class Sudoku {
       [0,0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0,0]
     ];
+    this.inked = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0]
+    ];
     this.focus = { x: 0, y: 0, r: 0, c: 0 };
     this.tl = new Point(xin,yin);
     this.bw = 50;
     this.bh = 50;
+    this.debug = true;
+  }
+  asString() {
+    var s="";
+    for (var r=0;r<9;r++) { 
+      for (var c=0;c<9;c++) {
+        s+=this.board[r][c]+" ";
+      }
+      s+="\n";
+    }
+    s+="Valid: "+this.isValid(this.board)+" isFull: "+this.isFull(this.board)
+      +"\n";
+    return s;
   }
   copy() {
     var ret = new Sudoku();
-    for (var r=0;r<9;r++) for (var c=0; c<9; c++) ret.board[r][c] = this.board[r][c];
+    for (var r=0;r<9;r++) for (var c=0; c<9; c++) 
+      ret.board[r][c] = this.board[r][c];
     ret.focus.x = this.focus.x; ret.focus.y = this.focus.y; ret.focus.r = this.focus.r; ret.focus.c = this.focus.c;
     ret.tl.x = this.tl.x; ret.tl.y = this.tl.y;
     ret.bw = this.bw;
     ret.bh = this.bh;
     return ret;
   }
+  copyFrom(i) {
+    for (var r=0;r<9;r++) for (var c=0; c<9; c++) 
+      this.board[r][c] = i.board[r][c];
+  }
   copyBoard(bin) {
-    //alert("begin copy");
     var b = [
       [0,0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0,0],
@@ -73,12 +104,12 @@ class Sudoku {
       [0,0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0,0]
     ];
-    //alert("before loop");
     for (var r=0;r<9;r++) for (var c=0; c<9; c++) b[r][c] = bin[r][c];
-    //alert("after loop");
     return b;
   }
   draw (ctx) {
+    this.tl.x = ctx.canvas.getBoundingClientRect().left;
+    this.tl.y = ctx.canvas.getBoundingClientRect().top;
 
     // Background
     ctx.fillStyle = "lightgrey";
@@ -118,7 +149,6 @@ class Sudoku {
       for (var c=0;c<9;c++) {
         ctx.fillStyle = 'black';
         ctx.font = '16px serif';
-        //alert("printing numbers");
         if (this.board[r][c] != 0)
           ctx.fillText(this.board[r][c],(c+1)*this.bw-30,(r+1)*this.bh-20);
       }
@@ -132,41 +162,36 @@ class Sudoku {
     this.focus.c = Math.floor(this.focus.x / this.bw);
     this.draw(ctx);
   }
-  solve (b,ctx) {
-    //alert("solve called");
-    for (var r=0;r<9;r++) {
-      //alert("first loop");
-      for (var c=0;c<9;c++) {
-        //alert("second loop "+c);
-        if (b[r][c] == 0) {
-          //alert("b[r][c]: "+b[r][c]);
-          for (var v=1;v<=9;v++) {
-            //alert("v: "+v);
-            b[r][c] = v;
-            //alert("assigned");
-            //this.draw(ctx);
-            //alert("drawn");
-            if (this.isValid(this.copyBoard(b))) {
-              //alert("valid: "+r+" "+c+" "+v);
-              if (this.isFull(this.copyBoard(b))) { 
-                alert("final solution found");
-
-                for (var i=0;i<9;i++) for (var j=0;j<9;j++)
-                  this.board[i][j] = b[r][c];
-
-                return true; 
-              } else {
-                if (this.solve(this.copyBoard(b))) {
-                  return true;
-                }
-              }
-            } else { alert("not valid"); }
-          }
-        }
-      }
+  ink(x,y,v) {
+    this.board[x][y] = v;
+    this.inked[x][y] = 1;
+  }
+  solve (b) {
+    if (!b.isValid()) return false;
+    if (b.isFull()) 
+    {
+      this.db("SOLUTION FOUND!\n");
+      this.db(b.asString());
+      this.db("XXXXXXXXXXXXXX!\n");
+      return true;
     }
-    alert("solve failed");
+    // Find first penciled square
+    var s = {x: 0, y: 0};
+    for (s.x=0;s.x<9 && b.board[s.x][s.y] != 0;s.x++) {
+      for (s.y=0;s.y<9 && b.board[s.x][s.y] != 0;s.y++)
+        ;
+    s.x--;s.y--;
+    //this.db("Fist blank: "+s.x+" "+s.y+" "+b.board[s.x][s.y]+"\n");
+    for (var v=1;v<=9;v++) {
+      b.board[s.x][s.y] = v;
+      if (this.solve(b))
+        return true; 
+    }
+    this.db("solve failed\n");
     return false;
+  }
+  db(text) {
+    if (this.debug) console.log(text);
   }
   keypress(ctx,e) {
     if (e.keyCode >= 48 && e.keyCode <= 57) {
@@ -174,14 +199,13 @@ class Sudoku {
       this.draw(ctx);
       this.isValid(this.board);
     } else if (e.keyCode == 83) {
-      var t = this.copyBoard(this.board);
-      //alert("calling solve");
-      this.solve(t,ctx);
+      var t = this.copy();
+      this.solve(t);
+      console.log(this.asString()+"\n");
       this.draw(ctx);
-      //alert("solve called");
     }
   }
-  isValid(b) {
+  isValid(b = this.board) {
     var totals = [
       [
         [0,0,0,0,0,0,0,0,0],
@@ -236,13 +260,11 @@ class Sudoku {
     }
     return flag;
   }
-  isFull(b) {
-    //alert("isFull called");
+  isFull(b = this.board) {
     var flag = true;
     for (var r=0;r<9;r++)
       for (var c=0;c<9;c++)
         flag = flag && (b[r][c] != 0);
-    //alert("isFull returning with "+flag);
     return flag;
   }
 }
@@ -284,13 +306,15 @@ sudoku.board[7][8] = 7;
 sudoku.board[8][0] = 8;
 sudoku.board[8][6] = 2;
 sudoku.board[8][8] = 5;
+sudoku.ink(0,0,5);
+sudoku.ink(0,2,9);
+console.log("Here is sudoku:\n"+sudoku.asString());
+var canvas = document.getElementById("mainCanvas");
 document.addEventListener("mousedown", mouseDownHandler);
 document.addEventListener("keydown", keyDownHandler);
 document.addEventListener("mousemove", mouseMoveHandler);
 canvas.width = 450;
 canvas.height = 450;
-//ctx.fillStyle = "lightgrey";
-//ctx.fillRect(0,0,canvas.width,canvas.height);
 sudoku.draw(ctx);
 function mouseDownHandler(e) {
   var x = e.x - sudoku.tl.x;
