@@ -5,12 +5,20 @@
   <style>
     * { padding: 0; margin: 0; }
     canvas { background: #fff; display: block; margin: 0 auto; }
+
+    #indicator {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      background-color: white;
+      border: 1px solid #dddddd;
+    }
   </style>
 </head>
 <body>
   <canvas id="mainCanvas" width="480" height="320"></canvas>
 <script> 
-class Point { 
+class Point {
   constructor(x=0,y=0) {
     this.x=x;
     this.y=y;
@@ -239,15 +247,6 @@ class Sudoku {
   }
   solve () {
     if (this.isValid() && this.isFull()) return true;
-    // Find first penciled square
-/*
-    var s = b.firstUninked();
-    
-    var count = 0;
-    var overflow = false;
-    var m = {x:0,y:0};
-*/
-
     var drawflag = true;
 
     var s = this.s;
@@ -255,15 +254,7 @@ class Sudoku {
     this.db("Count: "+count);
     var m = this.m;
     var overflow = this.overflow;
-    while(true && count < 10000) {
-    this.db("Hello");
-      if (drawflag) {
-      this.db("loopS: "+s.x+" "+s.y+" "+this.board[s.y][s.x]+" "+this.inked[s.y][s.x]+" overflow: "+overflow);
-      this.db("Count: "+count);
-      this.db("Max: "+m.x+m.y+this.board[m.x][m.y]);
-      this.db(this.asString());
-        //drawflag = false;
-      }
+    while (true) {
       count++;
       if (overflow) {
         if (drawflag) this.db("overflow "+s.x+" "+s.y);
@@ -301,65 +292,20 @@ class Sudoku {
       }
       this.db("\n");
     }
-/*
-      this.db(b.asString());
-      this.db("Count: "+count);
-      count--;
-      if (b.board[s.y][s.x]==0) b.board[s.y][s.x]++;
-      if (b.isValid()) {
-        if (s.x==9 && s.y==9) return true;
-        else {
-          s.x = (s.x+1) % 9; if (s.x==0) s.y = (s.y+1) % 9;
-          while (b.inked[s.y][s.x] == 1) {
-            s.x = (s.x+1) % 9; if (s.x==0) s.y = (s.y+1) % 9;
-          }
-        }
-      } else {
-        if (b.board[s.y][s.x]!=9) b.board[s.y][s.x]++;
-        else {
-          if (s.x==0 && s.y==0) return false;
-          else {
-            while (b.board[s.y][s.x]==9) {
-              b.board[s.y][s.x]=0;
-              if ( !(s.x==0 && s.y==0) ) {
-                s = this.prevUninked(s.x,s.y);
-              } else {
-                return false;
-              }
-            }
-            b.board[s.y][s.x] = (b.board[s.y][s.x]+1)%10;
-          }
-        }
-      }
-    }
-*/
-/*
-    if (!b.isValid()) return false;
-    if (b.isFull()) 
-    {
-      this.db("SOLUTION FOUND!\n");
-      this.db(b.asString());
-      this.db("XXXXXXXXXXXXXX!\n");
-      return true;
-    }
-    // Find first penciled square
-    var s = {x: 0, y: 0};
-    for (s.x=0;s.x<9 && b.board[s.x][s.y] != 0;s.x++) {
-      for (s.y=0;s.y<9 && b.board[s.x][s.y] != 0;s.y++)
-        ;
-    s.x--;s.y--;
-    //this.db("Fist blank: "+s.x+" "+s.y+" "+b.board[s.x][s.y]+"\n");
-    for (var v=1;v<=9;v++) {
-      b.board[s.x][s.y] = v;
-      if (this.solve(b))
-        return true; 
-    }
-    this.db("solve failed\n");
-    return false;
-*/
   }
   db(text) {
     if (this.debug) console.log(text);
+  }
+  requestSolve(ctx) {
+      document.querySelector('#indicator').style.background = 'red';
+      var t = this.copy();
+
+      t.setupsolve();
+      t.solve();
+      this.copyFrom(t);
+      console.log(this.asString()+"\n");
+      this.draw(ctx);
+      document.querySelector('#indicator').style.background = 'transparent';
   }
   keypress(ctx,e) {
     if (e.keyCode >= 48 && e.keyCode <= 57) {
@@ -368,13 +314,7 @@ class Sudoku {
       this.draw(ctx);
       this.isValid(this.board);
     } else if (e.keyCode == 83) {
-      var t = this.copy();
-      //this.solve(t);
-      t.setupsolve();
-      t.solve();
-      this.copyFrom(t);
-      console.log(this.asString()+"\n");
-      this.draw(ctx);
+      this.requestSolve(ctx);
     }
   }
   isValid(b = this.board) {
@@ -457,6 +397,19 @@ var canvas = document.getElementById("mainCanvas");
 var ctx = canvas.getContext('2d');
 let sudoku = new Sudoku(ctx.canvas.getBoundingClientRect().left,ctx.canvas.getBoundingClientRect().top);
 
+board0 = "\
+ . . . | . . . | . . .\n\
+ . . . | . . . | . . .\n\
+ . . . | . . . | . . .\n\
+-------+-------+-------\n\
+ . . . | . . . | . . .\n\
+ . . . | . . . | . . .\n\
+ . . . | . . . | . . .\n\
+-------+-------+-------\n\
+ . . . | . . . | . . .\n\
+ . . . | . . . | . . .\n\
+ . . . | . . . | . . .\n";
+
 board1 = "\
  9 5 . | . . . | 6 . 3\n\
  1 . . | 7 . . | 5 . .\n\
@@ -496,7 +449,7 @@ board3 = "\
  . . . | . . . | . . .\n\
  . . . | . . . | . . .\n";
 
-sudoku.fromString(board2);
+sudoku.fromString(board1);
 
 var canvas = document.getElementById("mainCanvas");
 document.addEventListener("mousedown", mouseDownHandler);
@@ -518,6 +471,16 @@ function mouseMoveHandler(e) {
   if (e.x <= canvas.width && e.y <= canvas.height)
     sudoku.keypress(ctx,e);
 }
+function solveButtonPressed() {
+  document.querySelector('#indicator').style.background = 'red';
+  setTimeout(function() {
+    sudoku.requestSolve(ctx);
+  }, 100);
+}
 </script>
+<button type="button" onClick="solveButtonPressed()">Solve</button>
+<br />
+Thinking: <div id="indicator" style="width: 8px; height: 8px;"></div>
+
 </body>
 </html>

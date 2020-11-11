@@ -7,7 +7,7 @@ brute force to solve puzzles.
 
 # How to use
 Click a cell then type a number.
-Hit 's' to solve. (Currently broken, see to-do)
+Hit 's' to solve.
 
 ## To-do
 - [ ] Puzzle generator (and button to invoke it)
