@@ -17,3 +17,35 @@ Hit 's' to solve. (Currently broken, see to-do)
 - [ ] Alert user when they complete a puzzle correctly
 - [ ] Generate different difficulties of puzzles
 - [ ] Proper solver algorithm using logic rather than guessing
+
+# Notes
+Described below is the algorithm I use to solve a puzzle. I am writing it
+out here, in pseudo-code-english, because I think this will make it easier
+to port to other languages.
+
+```
+if board is invalid, increment b[s]
+if overflow flag set,
+  unset
+  decrement s, (if s is already first square, there is no solution)
+  increment b[s]
+
+let s = first non-inked square
+let overflow flag = false
+while (true)
+  if invalid, increment b[s]
+  if overflow flag set,
+    unset
+    if s is first, 
+      return false
+    else
+      decrement s
+    increment b[s]
+  if blank
+    increment b[s]
+  otherwise,
+    if s is last
+      return true
+    else
+      increment s
+```
