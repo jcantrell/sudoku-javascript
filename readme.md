@@ -12,7 +12,7 @@ Hit 's' to solve. (Currently broken, see to-do)
 ## To-do
 - [ ] Puzzle generator (and button to invoke it)
 - [ ] Bugfix: entering an incorrect number in a cell and calling solve doesn't do anything
-- [ ] Do not allow user to overwrite initial clues
+- [x] Do not allow user to overwrite initial clues
 - [ ] Add a toggle to highlight conflicting numbers
 - [ ] Alert user when they complete a puzzle correctly
 - [ ] Generate different difficulties of puzzles
