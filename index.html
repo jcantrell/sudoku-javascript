@@ -129,6 +129,16 @@ class Sudoku {
     ctx.fillStyle = "lightgrey";
     ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
     
+    // Darken background of inked squares
+    for (var r=0;r<9;r++) {
+      for (var c=0;c<9;c++) {
+        if (this.inked[r][c]) {
+          ctx.fillStyle = "#c6c6c6";
+          ctx.fillRect(c*this.bw, r*this.bh, this.bw, this.bh);
+        }
+      }
+    }
+
     // Highlight focused row and column
     for (var i=0;i<9;i++) {
       ctx.fillStyle = "#bbbbbb";
@@ -179,6 +189,9 @@ class Sudoku {
   ink(x,y,v) {
     this.board[x][y] = v;
     this.inked[x][y] = 1;
+  }
+  pencil(x,y,v) {
+    this.board[x][y] = v;
   }
   next(xin,yin) {
     xin = (xin+1)%9;
@@ -350,7 +363,8 @@ class Sudoku {
   }
   keypress(ctx,e) {
     if (e.keyCode >= 48 && e.keyCode <= 57) {
-      this.board[this.focus.r][this.focus.c] = e.keyCode - 48;
+      if (!this.inked[this.focus.r][this.focus.c])
+        this.pencil(this.focus.r, this.focus.c, e.keyCode - 48);
       this.draw(ctx);
       this.isValid(this.board);
     } else if (e.keyCode == 83) {
@@ -433,8 +447,8 @@ class Sudoku {
     var xmap = [x,0,x,1,x,2,x,x,x,3,x,4,x,5,x,x,x,6,x,7,x,8,x];
     for (let i=0;i < s.length; i++) {
       if (s[i] === '\n') nl = i+1, y = (s[i+1]==='-') ? y : y+1;
-      if (s[i] ==='.') this.board[xmap[y][i-nl]] = 0;
-      if (s[i] >= '0' && s[i] <= '9') this.board[y][xmap[i-nl]] = (s[i] - '0');
+      if (s[i] ==='.') this.pencil(y, xmap[i-nl], 0);
+      if (s[i] >= '0' && s[i] <= '9') this.ink(y, xmap[i-nl], (s[i] - '0'));
     }
   }
 }
