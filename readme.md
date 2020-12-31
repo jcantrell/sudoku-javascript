@@ -10,13 +10,14 @@ Click a cell then type a number.
 Hit 's' to solve.
 
 ## To-do
+- [ ] Proper solver algorithm using logic rather than guessing
 - [ ] Puzzle generator (and button to invoke it)
 - [ ] Bugfix: entering an incorrect number in a cell and calling solve doesn't do anything
 - [x] Do not allow user to overwrite initial clues
 - [ ] Add a toggle to highlight conflicting numbers
-- [ ] Alert user when they complete a puzzle correctly
+- [x] Alert user when they complete a puzzle correctly
 - [ ] Generate different difficulties of puzzles
-- [ ] Proper solver algorithm using logic rather than guessing
+- [ ] Step solver
 
 # Notes
 Described below is the algorithm I use to solve a puzzle. I am writing it
