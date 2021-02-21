@@ -28,7 +28,7 @@ class Line {
   }
 }
 class SudokuBoard {
-  constructor(in) {
+  constructor() {
     this.board = [
       [0,0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0,0],
@@ -89,18 +89,6 @@ class Sudoku {
     this.bw = 50;
     this.bh = 50;
     this.debug = true;
-  }
-  inkedasString() {
-    var s="";
-    for (var r=0;r<9;r++) { 
-      for (var c=0;c<9;c++) {
-        s+=this.inked[r][c]+" ";
-      }
-      s+="\n";
-    }
-    s+="Valid: "+this.isValid(this.board)+" isFull: "+this.isFull(this.board)
-      +"\n";
-    return s;
   }
   asString() {
     var s="";
@@ -259,47 +247,19 @@ class Sudoku {
     if (this.inked[s.y][s.x]==0) return s;
     else return this.prevUninked(s.x,s.y);
   }
-  setupsolve() {
-    this.overflow = false;
-    this.s = this.firstUninked();
-    this.searchComplete = false;
-    this.solutionsCount = 0;
-  }
-  solveIteration() {
-    var s = this.s;
-    if (this.overflow) {
-      if (s.equal(this.firstUninked()))
-        this.searchComplete = true;
-      s = this.prevUninked(s.x,s.y);
-    }
-
-    if (this.overflow || !this.isValid() || this.board[s.y][s.x]==0) {
-      this.board[s.y][s.x] = (this.board[s.y][s.x]+1)%10;
-      this.overflow = (this.board[s.y][s.x]==0);
-    } else if (s.equal(this.lastUninked())) {
-      this.solutionsCount++;
-    } else {
-      s = this.nextUninked(s.x,s.y);
-    }
-    this.s = s;
-  }
-  solve () {
-    if (this.isValid() && this.isFull()) return true;
-
-    while (!this.searchComplete && this.solutionsCount < 1) {
-      this.solveIteration();
-    }
+  copyBoardFrom(b) {
+    for (var r=0;r<9;r++) for (var c=0;c<9;c++)
+      this.board[r][c] = b.board[r][c];
   }
   db(text) {
     if (this.debug) console.log(text);
   }
   requestSolve(ctx) {
       document.querySelector('#indicator').style.background = 'red';
-      var t = this.copy();
 
-      t.setupsolve();
-      t.solve();
-      this.copyFrom(t);
+      var t = new LogicSudokuSolver(this);
+      //var t = new SudokuSolver(this);
+      this.copyBoardFrom(t.solvedBoard());
       console.log(this.asString()+"\n");
       this.draw(ctx);
       document.querySelector('#indicator').style.background = 'transparent';
@@ -461,6 +421,8 @@ class SudokuSolver {
     this.s = this.board.firstUninked();
     this.searchComplete = false;
     this.solutionsCount = 0;
+
+    this.iterCount = 0;
   }
   asString() {
     var s = this.board.asString()
@@ -472,6 +434,8 @@ class SudokuSolver {
     return s;
   }
   solveIteration() {
+    this.iterCount++;
+    console.log("iterCount: "+this.iterCount);
     var s = this.s;
     if (this.overflow) {
       s = this.board.prevUninked(s.x,s.y);
@@ -515,7 +479,7 @@ class SudokuSolver {
   }
   solvedBoard() {
     this.unique();
-    return this.board();
+    return this.board;
   }
 }
 
@@ -533,6 +497,10 @@ class LogicSudokuSolver {
       [511,511,511,511,511,511,511,511,511],
       [511,511,511,511,511,511,511,511,511]
     ];
+    this.inkSquares();
+    console.log("Inked: \n"+this.asString()+"\n");
+
+    this.iterCounter = 0;
   }
   bit2num(v) {
     var n = 1;
@@ -543,7 +511,7 @@ class LogicSudokuSolver {
     return n;
   }
   singlePossibility(v) {
-      return ( v && !(v&(n-1)) ); // If exacly 1 bit is set
+      return ( v && !(v&(v-1)) ); // If exacly 1 bit is set
   }
   removePossibility(v,r,c) {
     for (var i=0;i<9;i++)
@@ -555,14 +523,14 @@ class LogicSudokuSolver {
     var blockr = Math.floor(r / 3)*3;
     for (var i=0;i<3;i++) for (var j=0;j<3;j++)
     {
-      this.PossibilityGrid[i+r][j+c] = this.PossibilityGrid[i+r][j+c] & ~v;
+      this.PossibilityGrid[i+blockr][j+blockc] = this.PossibilityGrid[i+blockr][j+blockc] & ~v;
     }
     this.PossibilityGrid[r][c] = this.PossibilityGrid[r][c] | v;
   }
   inkSquares() {
     for (var c=0;c<9;c++) for (var r=0;r<9;r++)
       if (this.board.inked[r][c])
-        this.PossibilityGrid[r][c] = 1<<(this.board[r][c]-1);
+        this.PossibilityGrid[r][c] = 1<<(this.board.board[r][c]-1);
   }
   rowwiseCount(r,v) {
     var t = 0;
@@ -581,34 +549,70 @@ class LogicSudokuSolver {
     var blockc = Math.floor(c / 3)*3;
     var blockr = Math.floor(r / 3)*3;
     for (var i=0;i<3;i++) for (var j=0;j<3;j++)
-      if (this.PossibilityGrid[i+r][j+c] & 1<<v) t++;
+      if (this.PossibilityGrid[i+blockr][j+blockc] & 1<<v) t++;
 
     return t;
   }
-  solveBoard() {
-    inkSquares();
+  solveIteration() {
+    this.iterCounter++;
+    console.log("solution iteration: " + this.iterCounter);
+    console.log(this.asString());
     for (var c=0;c<9;c++) for (var r=0;r<9;r++)
     {
       var v = this.PossibilityGrid[r][c];
-      if (singlePossibility(v))
-        removePossibility(v,r,c);
+      if (this.singlePossibility(v))
+        this.removePossibility(v,r,c);
       for (var p=0;p<9;p++)
         if (this.PossibilityGrid[r][c] & 1<<p)
         {
-          var rc = rowwiseCount(r,p);
-          var cc = columnwiseCount(c,p);
-          var bc = blockwiseCount(r,c,p);
+          var rc = this.rowwiseCount(r,p);
+          var cc = this.columnwiseCount(c,p);
+          var bc = this.blockwiseCount(r,c,p);
           if ((rc === 1) || (cc === 1) || (bc === 1))
             this.PossibilityGrid[r][c] = 1<<p;
         }
     }
   }
+  asString() {
+    var s="";
+    for (var r=0;r<9;r++) { 
+      for (var c=0;c<9;c++) {
+        s+=this.PossibilityGrid[r][c]+" ";
+      }
+      s+="\n";
+    }
+    return s;
+  }
+  solveBoard() {
+    var oldgrid = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0]
+  ];
+    var PossGridChanged = true;
+    while (PossGridChanged) {
+      for (var c=0;c<9;c++) for (var r=0;r<9;r++)
+        oldgrid[r][c] = this.PossibilityGrid[r][c];
+      this.solveIteration();
+      PossGridChanged = false;
+      for (var c=0;c<9;c++) for (var r=0;r<9;r++)
+        if (this.PossibilityGrid[r][c] != oldgrid[r][c])
+          PossGridChanged = true;
+    }
+  }
   solvedBoard() {
     this.solveBoard();
     for (var r=0;r<9;r++) for (var c=0;c<9;c++)
-      if (singlePossibility(this.PossibilitySquare[r][c]))
-        this.board[r][c] = bit2num(this.PossibilitySquare[r][c]);
-    return this.board();
+      if (this.singlePossibility(this.PossibilityGrid[r][c]))
+        this.board.board[r][c] = this.bit2num(this.PossibilityGrid[r][c]);
+    console.log("Solved board:\n"+this.asString());
+    return this.board;
   }
 }
 
@@ -668,7 +672,74 @@ board3 = "\
  . . . | . . . | . . .\n\
  . . . | . . . | . . .\n";
 
-sudoku.fromString(board1);
+board4 = "\
+ . . 7 | . 2 . | 5 4 .\n\
+ 4 . . | 3 . . | . 1 .\n\
+ 1 . . | . . 6 | . . .\n\
+-------+-------+-------\n\
+ 5 . . | 8 . . | . . .\n\
+ . 4 . | . 3 . | . 8 .\n\
+ . . . | . . 2 | . . 1\n\
+-------+-------+-------\n\
+ . . . | 2 . . | . . 7\n\
+ . 2 . | . . 9 | . . 3\n\
+ . 9 8 | . 6 . | 2 . .\n";
+
+board5 = "\
+ 8 . . | . . . | . . .\n\
+ . . 3 | 6 . . | . . .\n\
+ . 7 . | . 9 . | 2 . .\n\
+-------+-------+-------\n\
+ . 5 . | . . 7 | . . .\n\
+ . . . | . 4 5 | 7 . .\n\
+ . . . | 1 . . | . 3 .\n\
+-------+-------+-------\n\
+ . . 1 | . . . | . 6 8\n\
+ . . 8 | 5 . . | . 1 .\n\
+ . 9 . | . . . | 4 . .\n";
+
+// Golden Nugget
+board6 = "\
+ . . . | . . . | . 3 9\n\
+ . . . | . 1 . | . . 5\n\
+ . . 3 | . . 5 | 8 . .\n\
+-------+-------+-------\n\
+ . . 8 | . . 9 | . . 6\n\
+ . 7 . | . 2 . | . . .\n\
+ 1 . . | 4 . . | . . .\n\
+-------+-------+-------\n\
+ . . 9 | . . 8 | . 5 .\n\
+ . 2 . | . . . | 6 . .\n\
+ 4 . . | 7 . . | . . .\n";
+
+// Easter Monster
+board7 = "\
+ 1 . . | . . . | . . 2\n\
+ . 9 . | 4 . . | . 5 .\n\
+ . . 6 | . . . | 7 . .\n\
+-------+-------+-------\n\
+ . 5 . | 9 . 3 | . . .\n\
+ . . . | . 7 . | . . .\n\
+ . . . | 8 5 . | . 4 .\n\
+-------+-------+-------\n\
+ 7 . . | . . . | 6 . .\n\
+ . 3 . | . . 9 | . 8 .\n\
+ . . 2 | . . . | . . 1\n";
+
+// Al Escargot
+board8 = "\
+ 1 . . | . . 7 | . 9 .\n\
+ . 3 . | . 2 . | . . 8\n\
+ . . 9 | 6 . . | 5 . .\n\
+-------+-------+-------\n\
+ . . 5 | 3 . . | 9 . .\n\
+ . 1 . | . 8 . | . . 2\n\
+ 6 . . | . . 4 | . . .\n\
+-------+-------+-------\n\
+ 3 . . | . . . | . 1 .\n\
+ . 4 . | . . . | . . 7\n\
+ . . 7 | . . . | 3 . .\n";
+sudoku.fromString(board8);
 
 var canvas = document.getElementById("mainCanvas");
 document.addEventListener("mousedown", mouseDownHandler);
