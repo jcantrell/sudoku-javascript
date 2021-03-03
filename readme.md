@@ -50,3 +50,7 @@ while (true)
     else
       increment s
 ```
+
+Step solver:
+We need better delegation for ruleOutPossibilities, solutionIteration, and
+solveBoard
