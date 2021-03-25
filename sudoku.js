@@ -11,23 +11,6 @@ class Point {
   }
 }
 
-class Line {
-  constructor (a, b) {
-    this.a = a;
-    this.b = b;
-  }
-  draw (ctx) {
-    ctx.beginPath();
-    ctx.strokeStyle = 'blue';
-    ctx.lineWidth = 1;
-    ctx.moveTo(this.a.x,this.a.y);
-    ctx.lineTo(this.b.x,this.b.y);
-    ctx.stroke();
-  }
-  asString() {
-    return "(Line: "+this.a.asString()+" "+this.b.asString()+")"
-  }
-}
 class SudokuBoard {
   constructor() {
     this.board = [
@@ -391,6 +374,117 @@ class Sudoku {
       this.board[3*(bn%3)+j%3][3*Math.floor(bn/3)+Math.floor(j/3)] =ba[j];
     }
   }
+  swapRows(a,b) {
+    var t;
+    for (var i=0;i<9;i++) {
+      t = this.board[a][i];
+      this.board[a][i] = this.board[b][i];
+      this.board[b][i] = t;
+    }
+  }
+  swapColumns(a,b) {
+    var t;
+    for (var i=0;i<9;i++) {
+      t = this.board[i][a];
+      this.board[i][a] = this.board[i][b];
+      this.board[i][b] = t;
+    }
+  }
+  rotateClockwise() {
+    var tboard = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0]
+    ];
+    var inked = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0]
+    ];
+    for (var x=0;x<9;x++) for (var y=0;y<9;y++) {
+      tboard[x][y] = this.board[9-y-1][x];
+      inked[x][y] = this.inked[9-y-1][x];
+    }
+    this.copyFrom({board: tboard,inked: inked});
+  }
+  flopY() {
+    var tboard = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0]
+    ];
+    var inked = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0]
+    ];
+    for (var x=0;x<9;x++) for (var y=0;y<9;y++) {
+      tboard[x][y] = this.board[9-x-1][y];
+      inked[x][y] = this.inked[9-x-1][y];
+    }
+    this.copyFrom({board: tboard,inked: inked});
+  }
+  flopX() {
+    var tboard = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0]
+    ];
+    var inked = [
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0]
+    ];
+    for (var x=0;x<9;x++) for (var y=0;y<9;y++) {
+      tboard[x][y] = this.board[9-x-1][y];
+      inked[x][y] = this.inked[9-x-1][y];
+    }
+    this.copyFrom({board: tboard,inked: inked});
+  }
+  swapBlockColumn(a,b) {
+    for (var i=0;i<3;i++)
+      this.swapColumn(a+i,b+i);
+  }
+  swapBlockRow(a,b) {
+    for (var i=0;i<3;i++)
+      swapRow(a+i,b+i);
+  }
 }
 
 class SudokuGenerator {
@@ -431,6 +525,16 @@ class SudokuGenerator {
         this.loadShuffledBlock(i);
     }
     return this.board;
+  }
+  swapRows(i,j) {
+    this.board.swapRows(i,j);
+  }
+  swapColumns(i,j) {
+    this.board.swapColumns(i,j);
+  }
+  rotateClockwise() {
+  }
+  shuffleBoard() {
   }
 }
 

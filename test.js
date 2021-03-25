@@ -79,4 +79,32 @@ function testUniqueness() {
   else
     console.log("Not unique");
 }
-testUniqueness();
+function test0() {
+  let sudoku = new Sudoku(0,0);
+  sudoku.fromString(boardList[0]);
+  var t = new LogicSudokuSolver(sudoku);
+  t.solveBoard();
+  console.log(t.asString());
+}
+function testRotateClockwise() {
+  let sudoku = new Sudoku(0,0);
+  sudoku.fromString(boardList[9]);
+  console.log(sudoku.asString());
+  sudoku.rotateClockwise();
+  console.log(sudoku.asString());
+}
+function testFlopX() {
+  let sudoku = new Sudoku(0,0);
+  sudoku.fromString(boardList[9]);
+  console.log(sudoku.asString());
+  sudoku.flopX();
+  console.log(sudoku.asString());
+}
+function testFlopY() {
+  let sudoku = new Sudoku(0,0);
+  sudoku.fromString(boardList[9]);
+  console.log(sudoku.asString());
+  sudoku.flopY();
+  console.log(sudoku.asString());
+}
+testFlopX();
